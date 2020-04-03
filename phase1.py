@@ -55,9 +55,77 @@ def R_Type(instruction):
 	opcode = dict_of_format[instruction[0]][1]
 	funct3 = dict_of_format[instruction[0]][2]
 	funct7 = dict_of_format[instruction[0]][3]
+	
 	rd = '{0:05b}'.format(int(instruction[1][1:]))
 	rs1 = '{0:05b}'.format(int(instruction[2][1:]))
 	rs2 = '{0:05b}'.format(int(instruction[3][1:]))
 	machine_code = funct7 + rs2 + rs1 + funct3 + rd + opcode
 	return '{0:08X}'.format(int(machine_code, 2))
 	
+
+def I_Type(instruction):
+	instruction = instruction.split()
+	opcode = dict_of_format[instruction[0]][1]
+	funct3 = dict_of_format[instruction[0]][2]
+
+	rd = '{0:05b}'.format(int(instruction[1][1:]))
+	rs1 = '{0:05b}'.format(int(instruction[2][1:]))
+	imm = BitArray(int = int(instruction[3]),length = 12).bin
+
+	machine_code = imm + rs1 + funct3 + rd + opcode
+	return '{0:08X}'.format(int(machine_code, 2))
+
+
+def S_Type(instruction):
+	instruction = instruction.split()
+
+	opcode = dict_of_format[instruction[0]][1]
+	funct3 = dict_of_format[instruction[0]][2]
+	
+	rs2 = '{0:05b}'.format(int(instruction[1][1:]))
+	rs1 = '{0:05b}'.format(int(instruction[2][1:]))
+	imm = BitArray(int = int(instruction[3]),length = 12).bin
+
+	imm1 = imm[7:12]
+	imm2 = imm[0:7]
+
+	machine_code = imm2 + rs2 + rs1 + funct3 + imm1 + opcode
+	return '{0:08X}'.format(int(machine_code, 2))
+
+
+def U_Type(instruction):
+	instruction = instruction.split()
+	opcode = dict_of_format[instruction[0]][1]
+	rd = '{0:05b}'.format(int(instruction[1][1:]))
+	imm = BitArray(int = int(instruction[2]),length = 32).bin
+	imm1 = imm[12:32]
+	machine_code = imm1 + rd + opcode
+	return '{0:08X}'.format(int(machine_code, 2))
+
+
+def SB_Type(instruction):
+	instruction = instruction.split()
+	opcode = dict_of_format[instruction[0]][1]
+	funct3 = dict_of_format[instruction[0]][2]
+	rs1 = '{0:05b}'.format(int(instruction[1][1:]))
+	rs2 = '{0:05b}'.format(int(instruction[2][1:]))
+	imm = BitArray(int = int(instruction[3]),length = 13).bin	
+	imm1 = imm[0]
+	imm2 = imm[1]
+	imm3 = imm[2:8]
+	imm4 = imm[8:12]
+	machine_code = imm1 + imm3 + rs2 + rs1 + funct3 + imm4 + imm2 + opcode
+	return '{0:08X}'.format(int(machine_code, 2))
+
+
+def UJ_Type(instruction):
+	instruction = instruction.split()
+	opcode = dict_of_format[instruction[0]][1]
+	rd = '{0:05b}'.format(int(instruction[1][1:]))
+	imm = BitArray(int = int(instruction[2]),length = 32).bin
+	imm1 = imm[11]
+	imm2 = imm[20]
+	imm3 = imm[21:31]
+	imm4 = imm[12:20]
+	machine_code = imm1 + imm3 + imm2 + imm4 + rd + opcode
+	return '{0:08X}'.format(int(machine_code, 2))
