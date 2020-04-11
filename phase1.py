@@ -374,3 +374,44 @@ def encoder(instruction):
 	elif dict_of_format[temp_instruction[0]][0] == 'special':
 		machine_code = "00000001"
 	return machine_code
+
+class AssemblerHelper:
+	def __init__(self):
+		self.text=[]
+		self.data = data()
+		# self.machine_code=machine_code()
+		# self.instruction_info=[]
+
+	def get_original_code_and_label(self):
+		return original_code_and_labels()
+
+	def get_basic_code(self, original_code, label_position):
+		basic, result = basic_code(original_code, label_position)
+		if result == True:
+			self.text = basic.copy()
+			return basic, result
+		else:
+			return basic, result
+
+	def get_machine_code(self):
+		text_ = self.text.copy()
+		machine_code = []
+		f = open('output.mc', 'w')
+		if len(text_) != 0:
+			Text_Address = int("0x00000000", 16)
+			for i in range(len(text_)):
+				mc = encoder(text_[i])
+				machine_code.append(mc)
+				f.write('0x'+str('{0:08X}'.format(Text_Address))+' 0x'+mc+'\n')
+				Text_Address = Text_Address+4
+
+		if len(self.data)!=0:
+			for key, value in self.data.items():
+				f.write('0x'+str('{0:08X}'.format(key))+' 0x'+value+'\n')
+		f.close()
+		return machine_code, True
+		# else:
+		# 	return basic_code, result
+
+if __name__ == "__main__":
+	print('CS204')
