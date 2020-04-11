@@ -322,3 +322,138 @@ class Non_PipelineExecute:
 		self.MEM_Write = 0              # => Nothing to write in memory,    Control Signal
 
 		self.operation = "jal"
+
+	def alu(self):
+		if self.operation == "add" and self.B_select == 0:
+			self.RZ = self.RA + self.RB
+		elif self.operation == "and" and self.B_select == 0:
+			self.RZ = self.RA & self.RB
+		elif self.operation == "or" and self.B_select == 0:
+			self.RZ = self.RA | self.RB
+		elif self.operation == "sub" and self.B_select == 0:
+			self.RZ = self.RA - self.RB
+		elif self.operation == "mul" and self.B_select == 0:
+			self.RZ = self.RA * self.RB
+		elif self.operation == "div" and self.B_select == 0:
+			self.RZ = self.RA // self.RB
+		elif self.operation == "xor" and self.B_select == 0:
+			self.RZ = self.RA ^ self.RB
+		elif self.operation == "sll" and self.B_select == 0:
+			self.RZ = self.RA << self.RB
+		elif self.operation == "srl" and self.B_select == 0:
+			self.RZ = self.RA >> self.RB
+		elif self.operation == "slt" and self.B_select == 0:
+			self.RZ = 1 if self.RA < self.RB else 0
+		elif self.operation == "sra" and self.B_select == 0:
+			self.RZ = self.RA >> self.RB
+
+		elif self.operation == "addi" and self.B_select == 1:
+			self.RZ = self.RA + self.imm
+		elif self.operation == "andi" and self.B_select == 1:
+			self.RZ = self.RA & self.imm
+		elif self.operation == "ori" and self.B_select == 1:
+			self.RZ = self.RA | self.imm
+
+		elif self.operation == "lui" and self.B_select == 1:
+			self.RZ = self.imm
+		elif self.operation == "auipc" and self.B_select == 1:
+			self.RZ = self.PC + self.imm - 4
+
+		elif self.operation == "beq" and self.B_select == 1:
+			if(self.RA == self.RB):
+				self.PC = self.PC + self.imm - 4
+		elif self.operation == "bge" and self.B_select == 1:
+			if(self.RA >= self.RB):
+				self.PC = self.PC + self.imm - 4
+		elif self.operation == "blt" and self.B_select == 1:
+			if(self.RA < self.RB):
+				self.PC = self.PC + self.imm - 4
+		elif self.operation == "bne" and self.B_select == 1:
+			if(self.RA != self.RB):
+				self.PC = self.PC + self.imm - 4
+
+		elif self.operation == "jal" and self.B_select == 1:
+			self.PC_Temp = self.PC
+			self.PC = self.PC + self.imm - 4
+		elif self.operation == "jalr" and self.B_select == 1:
+			self.PC_Temp = self.PC
+			self.PC = self.RA + self.imm
+
+		elif self.operation == "lb" and self.B_select == 1:
+			self.RZ = self.RA + self.imm
+			self.MAR = self.RZ
+		elif self.operation == "lh" and self.B_select == 1:
+			self.RZ = self.RA + self.imm
+			self.MAR = self.RZ
+		elif self.operation == "lw" and self.B_select == 1:
+			self.RZ = self.RA + self.imm
+			self.MAR = self.RZ
+		elif self.operation == "ld" and self.B_select == 1:
+			self.RZ = self.RA + self.imm
+			self.MAR = self.RZ
+
+		elif self.operation == "sb" and self.B_select == 1:
+			self.RZ = self.RA + self.imm
+			self.MAR = self.RZ
+			self.MDR = self.RM 
+		elif self.operation == "sh" and self.B_select == 1:
+			self.RZ = self.RA + self.imm
+			self.MAR = self.RZ  
+			self.MDR = self.RM  
+		elif self.operation == "sw" and self.B_select == 1:
+			self.RZ = self.RA + self.imm
+			self.MAR = self.RZ  
+			self.MDR = self.RM 
+		elif self.operation == "sd" and self.B_select == 1:
+			self.RZ = self.RA + self.imm
+			self.MAR = self.RZ
+			self.MDR = self.RM 
+
+	def memory_access(self):
+		if self.B_select == 1:	
+			if self.MEM_Read == 1 and self.MEM_Write == 0:			# for load instructions
+				if self.operation == "lb":
+					self.MDR = self.Memory.readByte(self.MAR)   		#lb
+				elif self.operation == "lw":
+					self.MDR = self.Memory.readWord(self.MAR)   		#lw
+				elif self.operation == "lh":
+					self.MDR = self.Memory.readHalfWord(self.MAR)   	#lh
+				# elif self.operation == "ld":
+				# 	self.MDR = self.Memory.readDoubleWord(self.MAR)   	#ld
+				
+			elif self.MEM_Read == 1 and self.MEM_Write == 1:		# for store instructions
+				if self.operation == "sb":                      		#sb
+					self.Memory.writeByte(self.MAR,self.MDR)
+				elif self.operation == "sw":                    		#sw
+					self.Memory.writeWord(self.MAR,self.MDR)
+				elif self.operation == "sh":                      		#sh
+					self.Memory.writeHalfWord(self.MAR, self.MDR)
+				# elif self.operation == "sd":                      		#sd
+				# 		self.Memory.writeDoubleWord(self.MAR, self.MDR)
+					
+
+		if self.Y_select == 0:
+			self.RY = self.RZ
+		elif self.Y_select == 1:
+			self.RY = self.MDR
+		elif self.Y_select == 2:
+			self.RY = self.PC_Temp
+	
+	def write_back(self):
+		if self.Reg_Write == 1:
+			self.RegisterFile.write(self.rd, self.RY)
+
+	def getRegister(self):
+		return self.RegisterFile.getRegisters()
+
+	def getMemory(self):
+		return self.Memory.get_Memory()
+
+	def next_Instruction(self):
+		return ('{0:X}'.format(int(self.PC)))
+	
+	def prev_Instruction(self):
+		return ('{0:X}'.format(int(self.PC_prev)))
+
+	def printMemory(self):
+		self.Memory.printall()
