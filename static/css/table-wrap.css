@@ -1,0 +1,7 @@
+.table-wrap {
+    height: 400px;
+    overflow-y: auto;
+}
+/* .table-hover tbody tr:hover {
+    background-color: cadetblue;
+ } */

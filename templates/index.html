@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/table-wrap.css">
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <title>
+        Venus
+    </title>
+</head>
+
+<body>
+    <h1>{{title}}</h1>
+    <div class="container-fluid">
+        <div class="row no-gutters">
+            <div class="col-2">
+                <section>
+                    <h1>Editor</h1>
+                </section>
+                <section>
+                    <textarea id="editor" rows="20" cols="27"></textarea>
+                    <button id="assemble" type="submit" class="btn btn-primary">Assemble & Simulate</button><br>
+                </section>
+            </div>
+            <div class="col-5">
+                <section>
+                    <h1>Simulator</h1>
+                </section>
+                <section>
+                    <button id="run" type="submit" class="btn btn-outline-success">Run</button>
+                    <button id="step" type="submit" class="btn btn-outline-secondary">Step</button>
+                    <button id="prev" type="submit" class="btn btn-outline-secondary">Prev</button>
+                    <button id="reset" type="submit" class="btn btn-outline-secondary">Reset</button>
+                    <button id="dump" type="submit" class="btn btn-outline-warning">Dump</button>
+                    <button id="exit" type="submit" class="btn btn-outline-secondary">Exit</button>
+                    <br>
+                </section>
+                <section>
+                    <div class="table-wrap">
+                        <table class="table table-sm table-hover table-bordered">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th scope="col">PC</th>
+                                    <th scope="col">Machine Code</th>
+                                    <th scope="col">Basic Code</th>
+                                    <th scope="col">Original Code</th>
+                                </tr>
+                            </thead>
+                            <tbody id='main_table'>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="table table-sm table-hover table-bordered">
+                            <h4>Next Instruction: </h4>
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th scope="col">PC</th>
+                                    <th scope="col">Machine Code</th>
+                                    <th scope="col">Basic Code</th>
+                                    <th scope="col">Original Code</th>
+                                </tr>
+                            </thead>
+                            <tbody id="next_instruction">
+                                <tr>
+                                    <td scope="row">0x{{nextInstruction}}</td>
+                                    <td scope="row">{{machine_code}}</td>
+                                    <td scope="row">0x{{basic_code}}</td>
+                                    <td scope="row">0x{{original_code}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            <div class="col-5">
+                <section>
+                    <h1>Register and Memory View</h1>
+                </section>
+                <section>
+                    Display:
+                    <button id="hex" type="submit" class="btn btn-sm btn-outline-success"
+                        onclick="Display(id)">HEX</button>
+                    <button id="decimal" type="submit" class="btn btn-sm btn-outline-success"
+                        onclick="Display(id)">Decimal</button>
+                    <button id="ascii" type="submit" class="btn btn-sm btn-outline-success"
+                        onclick="Display(id)">ASCII</button>
+                </section>
+                <section>
+                    <div class="row">
+                        <div class="col table-wrap">
+                            <table class="table table-sm table-hover table-bordered">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th scope="col">Register No</th>
+                                        <th scope="col">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="register">
+                                    {%for key,value in register.items() %}
+                                    <tr>
+                                        <td scope="row">x{{key}}</td>
+                                        <td>{{value}}</td>
+                                    </tr>
+                                    {%endfor%}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col table-wrap">
+                            <table class="table table-sm table-hover table-bordered">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th scope="col">Address</th>
+                                        <th scope="col">+0</th>
+                                        <th scope="col">+1</th>
+                                        <th scope="col">+2</th>
+                                        <th scope="col">+3</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="memory">
+                                    {%for key,value in memory.items() %}
+                                    <tr>
+                                        <td>0x{{key}}</td>
+                                        <td>{{memory[key][0]}}</td>
+                                        <td>{{memory[key][1]}}</td>
+                                        <td>{{memory[key][2]}}</td>
+                                        <td>{{memory[key][3]}}</td>
+                                    </tr>
+                                    {%endfor%}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    Jump to:
+                    <button id="text" type="submit" class="btn btn-sm btn-outline-success"
+                        onclick="memory_section(id)">Text</button>
+                    <button id="data" type="submit" class="btn btn-sm btn-outline-success"
+                        onclick="memory_section(id)">Data</button>
+                    <button id="heap" type="submit" class="btn btn-sm btn-outline-success"
+                        onclick="memory_section(id)">Heap</button>
+                    <button id="stack" type="submit" class="btn btn-sm btn-outline-success"
+                        onclick="memory_section(id)">Stack</button>
+                    <div class="row">
+                        <div class="col">
+                            <input type="text" id="jumpAddress" class="form-control" placeholder="Address:">
+                        </div>
+                        <div class="col">
+                            <button type="submit" id="jump" class="btn btn-sm btn-outline-primary">Jump</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <script>
+        $('#assemble').click(function () {
+            var text = $.trim($("#editor").val())
+            // alert(text)
+            $.ajax({
+                url: "{{ url_for('assemble') }}",
+                type: 'POST',
+                data: { input: 'assemble', text: text },
+                success: function (data) {
+                    // console.log(data.info)
+                    if (data.success == 'pass') {
+                        var x;
+                        var info = data.info;
+                        if (Object.keys(info).length == 0){
+                            x = '<tr>' +
+                                '<td scope="row" id =""></td>' +
+                                '<td scope="row"></td>' +
+                                '<td scope="row"></td>' +
+                                '<td scope="row"></td>' +
+                                '</tr>';
+                        }
+                        else{
+                            for (i in info) {
+                            x = x + '<tr>' +
+                                '<td scope="row" id ="">0x' + info[i][0] + '</td>' +
+                                '<td scope="row">0x' + info[i][1] + '</td>' +
+                                '<td scope="row">' + info[i][2] + '</td>' +
+                                '<td scope="row">' + info[i][3] + '</td>' +
+                                '</tr>';
+                            }
+                        }
+                        $('#main_table').html(x);
+                        $('#main_table td').each(function () {
+                            $(this).attr('id', $(this).text());
+                        });
+                        next_instruction();
+                        refresh_register();
+                        refresh_memory();
+                        $('#run').show();
+                        $('#step').show();
+                        $('#prev').show();
+                        $('#reset').show();
+                        $('#dump').show();
+                    }
+                    else {
+                        alert(data.success);
+                        $('#run').hide();
+                        $('#step').hide();
+                        $('#prev').hide();
+                        $('#reset').hide();
+                        $('#dump').hide();
+                    }
+                }
+            });
+
+        });
+        $("#run").click(function () {
+            var type = 'run';
+            $.ajax({
+                url: "{{ url_for('simulate') }}",
+                type: 'POST',
+                data: { input: type },
+                success: function (data) {
+                    if (data.success == 'EXIT') {
+                        next_instruction();
+                        refresh_register();
+                        refresh_memory();
+                        if (data.cycle == 0) {
+                            alert('Click the Assemble & Simulate.');
+                        }
+                        else{
+                            alert('Code Executed Succesfully.\nTotal Cycle:' + data.cycle);
+                        }
+                    }
+                    if (data.success == 'BREAKPOINT') {
+                        next_instruction();
+                        refresh_register();
+                        refresh_memory();
+                        alert('Code Executed Till Breakpoint.\nTotal Cycle:' + data.cycle);
+
+                    }
+                }
+            });
+        });
+        $("#step").click(function () {
+            var type = 'step';
+            $.ajax({
+                url: "{{ url_for('simulate') }}",
+                type: 'POST',
+                data: { input: type },
+                success: function (data) {
+                    next_instruction();
+                    refresh_register();
+                    refresh_memory();
+                    if (data.success != 'update') {
+                        if (data.cycle == 0) {
+                            alert('Click the Assemble & Simulate.');
+                        }
+                        else
+                            alert('Code Executed Succesfully.\nTotal Cycle:' + data.cycle);
+                    }
+                }
+            });
+
+        });
+        function next_instruction() {
+            $.ajax({
+                url: "{{ url_for('next_instruction') }}",
+                type: 'GET',
+                success: function (data) {
+                    var basic_code;
+                    var machine_code;
+                    var original_code;
+                    var x = 0;
+                    $('#main_table td').each(function () {
+                        var id = $(this).attr('id');
+                        // console.log(id);
+                        if (id == '0x' + data.pc && x == 0) {
+                            $(this).css('background', '#00d1b2');
+                            x = x + 1;
+                        }
+                        else if (x == 4) {
+                            x = 0;
+                            return;
+                        }
+                        else {
+                            $(this).css('background', 'white');
+                            if (x == 1) {
+                                $(this).css('background', '#00d1b2');
+                                machine_code = $(this).text();
+                                x = x + 1;
+                            }
+                            else if (x == 2) {
+                                $(this).css('background', '#00d1b2');
+                                basic_code = $(this).text();
+                                x = x + 1;
+                            }
+                            else if (x == 3) {
+                                $(this).css('background', '#00d1b2');
+                                original_code = $(this).text();
+                                x = x + 1;
+                            }
+
+                        }
+                    });
+                    var next_instruction = '<tr>' +
+                        '<td scope="row">0x' + data.pc + '</td>' +
+                        '<td scope="row">' + machine_code + '</td>' +
+                        '<td scope="row">' + basic_code + '</td>' +
+                        '<td scope="row">' + original_code + '</td>' +
+                        '</tr>';
+                    $('#next_instruction').html(next_instruction);
+                }
+            });
+        }
+        function prev_instruction() {
+            $.ajax({
+                url: "{{ url_for('prev_instruction') }}",
+                type: 'GET',
+                success: function (data) {
+                    var basic_code;
+                    var machine_code;
+                    var original_code;
+                    var x = 0;
+                    $('#main_table td').each(function () {
+                        var id = $(this).attr('id');
+                        $(this).css('background', 'white');
+                        if (id == '0x' + data.pc) {
+                            if (x == 0) {
+                                $(this).css('background', '#00d1b2');
+                                x = x + 1;
+                            }
+                        }
+                        else if (x == 4) {
+                            x = 0;
+                            return;
+                        }
+                        else {
+                            if (x == 1) {
+                                $(this).css('background', '#00d1b2');
+                                machine_code = $(this).text();
+                                x = x + 1;
+                            }
+                            else if (x == 2) {
+                                $(this).css('background', '#00d1b2');
+                                basic_code = $(this).text();
+                                x = x + 1;
+                            }
+                            else if (x == 3) {
+                                $(this).css('background', '#00d1b2');
+                                original_code = $(this).text();
+                                x = x + 1;
+                            }
+                        }
+                    });
+                    var next_instruction = '<tr>' +
+                        '<td scope="row">0x' + data.pc + '</td>' +
+                        '<td scope="row">' + machine_code + '</td>' +
+                        '<td scope="row">' + basic_code + '</td>' +
+                        '<td scope="row">' + original_code + '</td>' +
+                        '</tr>';
+                    $('#next_instruction').html(next_instruction);
+                }
+            });
+        }
+        function refresh_register() {
+            $.ajax({
+                url: "{{ url_for('refresh_register') }}",
+                type: 'GET',
+                success: function (data) {
+                    // alert(data.success);
+                    var t = '';
+                    var register = data.success;
+                    var view = data.view;
+                    if (view == 'hex') {
+                        for (register_i in register) {
+                            t = t + '<tr>' + '<td scope="row">x' + register_i + '</td>' + '<td>0x' + register[register_i].toUpperCase() + '</td></tr>'
+                        }
+                        // alert(t);
+                        $('#register').html(t);
+                    }
+                    else if (view == 'decimal') {
+                        for (register_i in register) {
+                            t = t + '<tr>' + '<td scope="row">x' + register_i + '</td>' + '<td>' + hex2Int(register[register_i]) + '</td></tr>';
+                        }
+                        // alert(t);
+                        $('#register').html(t);
+                    }
+                    else if (view == 'ascii') {
+                        for (register_i in register) {
+                            t = t + '<tr>' + '<td scope="row">x' + register_i + '</td>' + '<td>' + hex2a(register[register_i]) + '</td></tr>';
+                        }
+                        // alert(t);
+                        $('#register').html(t);
+                    }
+                }
+            });
+        }
+        function refresh_memory() {
+            $.ajax({
+                url: "{{ url_for('refresh_memory') }}",
+                type: 'GET',
+                success: function (data) {
+                    var t = '';
+                    var unordered_memory = data.success;
+                    var memory = {};
+                    Object.keys(unordered_memory).sort(function (a, b) { return hex2Int(a) - hex2Int(b) }).forEach(function (key) {
+                        memory[hex2Int(key)] = unordered_memory[key];
+                    });
+                    var view = data.view;
+                    var dataview = data.dataview;
+                    var lower = 0;
+                    var upper = 2147483644;
+                    if (dataview == 'text') {
+                        lower = 0;
+                        upper = 268435452;
+                    }
+                    else if (dataview == 'data') {
+                        lower = 268435456;
+                        upper = 268468196;
+                    }
+                    else if (dataview == 'heap') {
+                        lower = 268468200;
+                        upper = 1207975924;
+                    }
+                    else if (dataview == 'stack') {
+                        lower = 1207975928;
+                        upper = 2147483644;
+                    }
+                    else if (dataview == 'jump') {
+                        lower = data.address;
+                        upper = data.address;
+                    }
+                    if (view == 'hex' || view == '') {
+                        for (key in memory) {
+                            if ((key) >= lower && (key) <= upper) {
+                                t = t + '<tr>' +
+                                    '<td scope="row">0x' + Number(key).toString(16).padStart(8, "0").toUpperCase() + '</td>' +
+                                    '<td>' + memory[key][0].toUpperCase() + '</td>' +
+                                    '<td>' + memory[key][1].toUpperCase() + '</td>' +
+                                    '<td>' + memory[key][2].toUpperCase() + '</td>' +
+                                    '<td>' + memory[key][3].toUpperCase() + '</td>' +
+                                    '</tr>';
+                            }
+                        }
+                        $('#memory').html(t);
+                    }
+                    else if (view == 'decimal') {
+                        for (key in memory) {
+                            if ((key) >= lower && (key) <= upper)
+                                t = t + '<tr>' +
+                                    '<td scope="row">0x' + Number(key).toString(16).padStart(8, "0").toUpperCase() + '</td>' +
+                                    '<td>' + hex2Int(memory[key][0]) + '</td>' +
+                                    '<td>' + hex2Int(memory[key][1]) + '</td>' +
+                                    '<td>' + hex2Int(memory[key][2]) + '</td>' +
+                                    '<td>' + hex2Int(memory[key][3]) + '</td>' +
+                                    '</tr>';
+                        }
+                        $('#memory').html(t);
+                    }
+                    else if (view == 'ascii') {
+                        for (key in memory) {
+                            if ((key) >= lower && (key) <= upper)
+                                t = t + '<tr>' +
+                                    '<td scope="row">0x' + Number(key).toString(16).padStart(8, "0").toUpperCase() + '</td>' +
+                                    '<td>' + hex2a(memory[key][0]) + '</td>' +
+                                    '<td>' + hex2a(memory[key][1]) + '</td>' +
+                                    '<td>' + hex2a(memory[key][2]) + '</td>' +
+                                    '<td>' + hex2a(memory[key][3]) + '</td>' +
+                                    '</tr>';
+                        }
+                        $('#memory').html(t);
+                    }
+                }
+            });
+        }
+        function Display(view) {
+            $.ajax({
+                url: "{{ url_for('display') }}",
+                type: 'POST',
+                data: { input: view },
+                success: function (data) {
+                    // location.reload();
+                    refresh_register();
+                    refresh_memory();
+
+                }
+            });
+        }
+        function memory_section(section) {
+            $.ajax({
+                url: "{{ url_for('memory_section') }}",
+                type: 'POST',
+                data: { input: section },
+                success: function (data) {
+                    refresh_memory();
+                }
+            });
+        }
+        function hex2a(hexx) {
+            var hex = hexx.toString();//force conversion
+            var deci = hex2Int(hex);
+            var str = '';
+            if (deci >= 32 && deci <= 127) {
+                return String.fromCharCode(deci);
+            }
+            return '0x' + hexx;
+        }
+        function hex2Int(hex) {
+            if (hex.length % 2 != 0) {
+                hex = "0" + hex;
+            }
+            var num = parseInt(hex, 16);
+            var maxVal = Math.pow(2, hex.length / 2 * 8);
+            if (num > maxVal / 2 - 1) {
+                num = num - maxVal
+            }
+            return num;
+        }
+        $("#prev").click(function () {
+            var type = 'prev';
+            $.ajax({
+                url: "{{ url_for('simulate') }}",
+                type: 'POST',
+                data: { input: type },
+                success: function (data) {
+                    prev_instruction();
+                    refresh_register();
+                    refresh_memory();
+                    if (data.success != 'update') {
+                        alert(data.success);
+                    }
+                }
+            });
+        });
+        $("#reset").click(function () {
+            var type = 'reset';
+            $.ajax({
+                url: "{{ url_for('simulate') }}",
+                type: 'POST',
+                data: { input: type },
+                success: function (data) {
+                    next_instruction();
+                    refresh_register();
+                    refresh_memory();
+                }
+            });
+        });
+        $("#dump").click(function () {
+            var type = 'dump';
+            $.ajax({
+                url: "{{ url_for('simulate') }}",
+                type: 'POST',
+                data: { input: type },
+                success: function (data) {
+                    // console.log(data.success);
+                    alert('Machine code copied to clipboard');
+                    var copyText = data.success;
+                    // copyText.select();
+                    // copyText.setSelectionRange(0, 99999)
+                    // document.execCommand("copy");
+                    // alert("Copied the text: " + copyText.value);
+                    let copyFrom = document.createElement("textarea");
+                    document.body.appendChild(copyFrom);
+                    copyFrom.textContent = data.success;
+                    copyFrom.select();
+                    document.execCommand("copy");
+                    copyFrom.remove();
+                }
+            });
+        });
+        $("#jump").click(function () {
+            var Address = $('#jumpAddress').val();
+            $.ajax({
+                url: "{{ url_for('jump') }}",
+                type: 'POST',
+                data: { input: Address },
+                success: function (data) {
+                    refresh_memory();
+                }
+            });
+        });
+        $('#exit').click(function () {
+            $.ajax({
+                url: "{{ url_for('exit_') }}",
+                type: 'GET',
+                success: function (data) {
+                    alert(data.success);
+                }
+            });
+        })
+    </script>
+</body>
+<script>
+    $(document).ready(function () {
+        next_instruction();
+        refresh_register();
+        refresh_memory();
+    });
+</script>
+
+</html>
